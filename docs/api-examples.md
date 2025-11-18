@@ -64,6 +64,63 @@ $userId = $user->getId('user@example.com', UserIDTypeEnum::OpenID->value);
 $userId = $user->getId('13800138000', UserIDTypeEnum::UnionID->value);
 ```
 
+### 多维表格记录
+
+```php
+<?php
+
+use Yuxin\Feishu\Bitable;
+
+$bitable = new Bitable('your_app_id', 'your_app_secret');
+
+// 创建记录
+$record = $bitable->createRecord(
+    'app_token',
+    'table_id',
+    [
+        '客户名称' => '测试公司',
+        '手机号' => '13800138000',
+    ],
+    userIdType: 'user_id',
+    clientToken: 'uuid-1234',
+    ignoreConsistencyCheck: false
+);
+
+$bitable->createRecordByUrl(
+    'https://foo.feishu.cn/base/bascn123?table=tbl456',
+    ['客户名称' => 'URL 解析']
+);
+
+// 更新状态
+$bitable->updateRecord(
+    'app_token',
+    'table_id',
+    $record['record_id'],
+    ['跟进状态' => '已联系'],
+    userIdType: 'user_id',
+    ignoreConsistencyCheck: true
+);
+
+// 查询
+$list = $bitable->listRecords('app_token', 'table_id', [
+    'page_size' => 20,
+]);
+
+### Wiki 节点
+
+```php
+<?php
+
+use Yuxin\Feishu\Wiki;
+
+$wiki = new Wiki('your_app_id', 'your_app_secret');
+
+$node = $wiki->getNode('wikcn123456', 'bitable');
+
+echo $node['node']['obj_token'];
+```
+```
+
 ## 消息类型示例
 
 ### 富文本消息

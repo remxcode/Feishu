@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Yuxin\Feishu\AccessToken accessToken()
  * @method static \Yuxin\Feishu\Group group()
  * @method static \Yuxin\Feishu\Message message()
+ * @method static \Yuxin\Feishu\Bitable bitable()
  * @method static \Yuxin\Feishu\User user()
+ * @method static \Yuxin\Feishu\Wiki wiki()
  */
 class Feishu extends Facade
 {

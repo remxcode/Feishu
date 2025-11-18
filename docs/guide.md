@@ -5,6 +5,8 @@
 - [安装](#安装)
 - [配置](#配置)
 - [基本使用](#基本使用)
+- [多维表格 (Bitable)](#多维表格-bitable)
+- [知识空间 (Wiki)](#知识空间-wiki)
 - [消息类型](#消息类型)
 - [Laravel 集成](#laravel-集成)
 - [错误处理](#错误处理)
@@ -73,6 +75,60 @@ $message->send(
     '这是一条群组消息'
 );
 ```
+
+## 多维表格 (Bitable)
+
+使用 SDK 内置的 `Bitable` 客户端即可完成多维表记录的新增、更新、查询等操作。
+
+```php
+use Yuxin\Feishu\Facades\Feishu;
+
+$bitable = Feishu::bitable();
+
+// 创建记录
+$record = $bitable->createRecord('app_token', 'table_id', [
+    '合作类型' => '企业',
+    '企业名称' => '上海游幕科技有限公司',
+]);
+
+// 更新记录
+$bitable->updateRecord('app_token', 'table_id', $record['record_id'], [
+    '跟进状态' => '初步接洽',
+]);
+
+// 查询 & 分页
+$list = $bitable->listRecords('app_token', 'table_id', [
+    'page_size' => 20,
+    'page_token' => null,
+]);
+
+// 删除记录
+$bitable->deleteRecord('app_token', 'table_id', $record['record_id']);
+
+// 也可以直接通过 URL（base/wiki 链接）解析
+$bitable->createRecordByUrl(
+    'https://foo.feishu.cn/base/bascn123?table=tbl456',
+    ['客户名称' => 'URL 测试']
+);
+```
+
+> `app_token`、`table_id`、`record_id` 等参数直接使用飞书多维表格提供的 ID。SDK 会自动处理 `tenant_access_token`、Header 以及异常抛出；如需传 `user_id_type`、`client_token`、`ignore_consistency_check`，可在 `createRecord` 的额外参数中注明。
+
+## 知识空间 (Wiki)
+
+获取 Wiki 节点信息，可快速定位文档、Bitable、白板等对象：
+
+```php
+use Yuxin\Feishu\Facades\Feishu;
+
+$node = Feishu::wiki()->getNode('wikcn123456', 'bitable');
+
+// 响应中可获取 obj_type / obj_token
+$objType  = $node['node']['obj_type'];
+$objToken = $node['node']['obj_token'];
+```
+
+> `token` 为节点或云文档 token，`obj_type` 为文档类型（docx/sheet/bitable 等），`need_path` / `need_relative_path` 等参数与官方文档一致，SDK 负责处理鉴权与异常。
 
 ### 搜索群组
 

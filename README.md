@@ -30,6 +30,20 @@ $userInfo = Feishu::user()->getInfo('user_id');
 
 // Get access token
 $token = Feishu::accessToken()->getToken();
+
+// Manage Bitable records
+$record = Feishu::bitable()->createRecord('app_token', 'table_id', [
+    '客户名称' => '测试公司',
+]);
+
+// Or use URL directly
+Feishu::bitable()->createRecordByUrl(
+    'https://foo.feishu.cn/base/bascn123?table=tbl456',
+    ['客户名称' => 'URL']
+);
+
+// Fetch Wiki node info
+$node = Feishu::wiki()->getNode('wikcn123', 'bitable');
 ```
 
 ## Documentation

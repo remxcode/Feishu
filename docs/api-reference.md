@@ -3,7 +3,9 @@
 ## 目录
 
 - [Message 类](#message-类)
+- [Bitable 类](#bitable-类)
 - [Group 类](#group-类)
+- [Wiki 类](#wiki-类)
 - [User 类](#user-类)
 - [AccessToken 类](#accesstoken-类)
 - [Feishu Facade](#feishu-facade)
@@ -23,6 +25,114 @@ public function __construct(
     ?AccessTokenInterface $accessTokenInstance = null,
     ?UserInterface $userInstance = null
 )
+```
+
+## Bitable 类
+
+用于操作飞书多维表格（Bitable），支持记录的增删改查。
+
+### 构造函数
+
+```php
+public function __construct(
+    string $appId,
+    string $appSecret,
+    ?AccessTokenInterface $accessTokenInstance = null,
+    ?HttpClient $httpClient = null
+)
+```
+
+### 方法
+
+#### createRecord()
+
+创建一条记录。
+
+```php
+public function createRecord(
+    string $appToken,
+    string $tableId,
+    array $fields,
+    string $userIdType = 'open_id',
+    ?string $clientToken = null,
+    ?bool $ignoreConsistencyCheck = null
+): array
+```
+
+- `$fields`：多维表字段值（结构与官方接口一致）。
+- `$userIdType` / `$clientToken` / `$ignoreConsistencyCheck`：对应接口的查询参数。
+
+#### updateRecord()
+
+更新记录。
+
+```php
+public function updateRecord(
+    string $appToken,
+    string $tableId,
+    string $recordId,
+    array $fields,
+    string $userIdType = 'open_id',
+    ?bool $ignoreConsistencyCheck = null
+): array
+```
+
+- `$userIdType` / `$ignoreConsistencyCheck`：对应接口的查询参数。
+#### getRecord()
+
+获取单条记录详情。
+
+```php
+public function getRecord(
+    string $appToken,
+    string $tableId,
+    string $recordId
+): array
+```
+
+#### listRecords()
+
+分页查询记录。
+
+```php
+public function listRecords(
+    string $appToken,
+    string $tableId,
+    array $query = []
+): array
+```
+
+`$query` 可包含 `page_size`、`page_token`、`view_id`、`filter` 等参数。
+
+#### deleteRecord()
+
+删除单条记录。
+
+```php
+public function deleteRecord(
+    string $appToken,
+    string $tableId,
+    string $recordId
+): bool
+```
+
+**示例**
+
+```php
+use Yuxin\Feishu\Facades\Feishu;
+
+$bitable = Feishu::bitable();
+
+$created = $bitable->createRecord('app_token', 'table_id', [
+    '客户名称' => '测试公司',
+    '联系方式' => '13800138000',
+]);
+
+$bitable->updateRecord('app_token', 'table_id', $created['record_id'], [
+    '跟进状态' => '谈判中',
+]);
+
+$records = $bitable->listRecords('app_token', 'table_id', ['page_size' => 50]);
 ```
 
 **参数：**
@@ -138,6 +248,44 @@ public function __construct(
     ?AccessTokenInterface $accessTokenInstance = null,
     ?UserInterface $userInstance = null
 )
+```
+
+## Wiki 类
+
+封装 Wiki 空间节点相关接口。
+
+### 构造函数
+
+```php
+public function __construct(
+    string $appId,
+    string $appSecret,
+    ?AccessTokenInterface $accessTokenInstance = null,
+    ?HttpClient $httpClient = null
+)
+```
+
+### 方法
+
+#### getNode()
+
+```php
+public function getNode(
+    string $spaceId,
+    string $nodeToken,
+    array $options = []
+): array
+```
+
+- `$options` 可包含 `need_path`、`need_relative_path`。
+
+**示例**
+
+```php
+$node = Feishu::wiki()->getNode('wikcn123', 'bitable');
+
+$objType  = $node['node']['obj_type']; // bitable/docx 等
+$objToken = $node['node']['obj_token'];
 ```
 
 ### 方法
@@ -474,3 +622,17 @@ try {
     echo "群组未找到: " . $e->getMessage();
 }
 ```
+- **URL 便捷方法**
+
+```php
+public function createRecordByUrl(
+    string $url,
+    array $fields,
+    string $userIdType = 'open_id',
+    ?string $clientToken = null,
+    ?bool $ignoreConsistencyCheck = null
+): array
+```
+
+支持将多维表 `base`/`wiki` 链接直接传入，SDK 自动解析 `app_token` 与 `table_id`，然后复用 `createRecord`。
+- 同理提供 `updateRecordByUrl(string $url, string $recordId, array $fields, string $userIdType = 'open_id', ?bool $ignoreConsistencyCheck = null)`。

@@ -52,9 +52,29 @@ class Feishu
         );
     }
 
+    public function bitable(): Bitable
+    {
+        return new Bitable(
+            config('feishu.app_id'),
+            config('feishu.app_secret'),
+            $this->accessToken(),
+            $this->app->make(HttpClient::class),
+        );
+    }
+
     public function user(): User
     {
         return new User(
+            config('feishu.app_id'),
+            config('feishu.app_secret'),
+            $this->accessToken(),
+            $this->app->make(HttpClient::class),
+        );
+    }
+
+    public function wiki(): Wiki
+    {
+        return new Wiki(
             config('feishu.app_id'),
             config('feishu.app_secret'),
             $this->accessToken(),
