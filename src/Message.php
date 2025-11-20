@@ -148,7 +148,7 @@ class Message
     {
         return match ($receiveIdType) {
             ReceiveIDTypeEnum::ChatID->value => $to,
-            ReceiveIDTypeEnum::OpenID->value => $this->userInstance->getId($to, $userIdType),
+            ReceiveIDTypeEnum::OpenID->value => $this->userInstance->getId($to, $userIdType, false),
             default                          => throw new InvalidArgumentException('Invalid receive id type'),
         };
     }

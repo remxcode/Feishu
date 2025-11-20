@@ -47,7 +47,7 @@ class User implements UserInterface
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    public function getId(string $username, string $type = 'union_id'): string
+    public function getId(string $username, string $type = 'union_id', bool $includeResigned = true): string
     {
         if (! in_array($type, array_column(UserIDTypeEnum::cases(), 'value'))) {
             throw new InvalidArgumentException('Invalid user id type');
@@ -64,7 +64,7 @@ class User implements UserInterface
                 filter_var($username, FILTER_VALIDATE_EMAIL)
                     ? 'emails'
                     : 'mobiles'    => (array) $username,
-                'include_resigned' => true,
+                'include_resigned' => $includeResigned,
             ]),
         ])->getBody()->getContents(), true);
 

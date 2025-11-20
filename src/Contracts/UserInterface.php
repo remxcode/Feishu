@@ -12,5 +12,5 @@ interface UserInterface
 
     public function setGuzzleOptions(array $options): void;
 
-    public function getId(string $username, string $type = 'union_id'): string;
+    public function getId(string $username, string $type = 'union_id', bool $includeResigned = true): string;
 }
