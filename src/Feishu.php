@@ -6,6 +6,7 @@ namespace Yuxin\Feishu;
 
 use Illuminate\Contracts\Foundation\Application;
 use InvalidArgumentException;
+use Yuxin\Feishu\Server;
 
 class Feishu
 {
@@ -80,5 +81,10 @@ class Feishu
             $this->accessToken(),
             $this->app->make(HttpClient::class),
         );
+    }
+
+    public function server(?string $encryptKey = null): Server
+    {
+        return new Server($encryptKey ?? config('feishu.encrypt_key'));
     }
 }

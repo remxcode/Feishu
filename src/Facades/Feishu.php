@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Yuxin\Feishu\Bitable bitable()
  * @method static \Yuxin\Feishu\User user()
  * @method static \Yuxin\Feishu\Wiki wiki()
+ * @method static \Yuxin\Feishu\Server server(?string $encryptKey = null)
  */
 class Feishu extends Facade
 {

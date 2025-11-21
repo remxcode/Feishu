@@ -46,6 +46,41 @@ Feishu::bitable()->createRecordByUrl(
 $node = Feishu::wiki()->getNode('wikcn123', 'bitable');
 ```
 
+## Callbacks (Card/Event)
+
+Feishu callbacks are verified & decrypted via the built-in `Server` helper.
+
+```php
+use Yuxin\Feishu\Facades\Feishu;
+
+$server = Feishu::server(); // uses config('feishu.encrypt_key') if set
+
+// Register middleware-style handlers
+$server->with(function (array $message, Closure $next) {
+    // your logic, e.g. route by $message['action']['value']
+    return $next($message);
+});
+
+// Serve request (Laravel example)
+// You can omit args to read current request (Laravel):
+// $result = $server->serve();
+$result = $server->serve(request()->headers->all(), request()->getContent());
+
+// Challenge handshake
+if (isset($result['challenge'])) {
+    return response()->json(['challenge' => $result['challenge']]);
+}
+
+// Successful processing
+return response()->json($result); // ['status' => 'success', 'data' => $message]
+```
+
+Notes:
+- Headers `X-Lark-Request-Timestamp/Nonce/Signature` are verified; optional AES-256-CBC decrypt when body carries `encrypt`.
+- Signature algorithm follows Feishu docs: `sha256(timestamp + nonce + encryptKey + rawBody)` (hex string). `encryptKey` is required if your app configures callback encryption; keep it blank for plain callbacks.
+- Encrypted callbacks expect base64-encoded payload where the first 16 bytes are IV, followed by AES-256-CBC ciphertext; IV is extracted from the decoded buffer.
+- Out-of-window (default 5 minutes) or bad signatures throw exceptions; you can wrap/handle as needed.
+
 ## Documentation
 
 For complete documentation, visit our [documentation site](https://feishu-nine.vercel.app/).

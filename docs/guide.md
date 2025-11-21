@@ -8,6 +8,7 @@
 - [多维表格 (Bitable)](#多维表格-bitable)
 - [知识空间 (Wiki)](#知识空间-wiki)
 - [消息类型](#消息类型)
+- [回调 (卡片/事件)](#回调-卡片事件)
 - [Laravel 集成](#laravel-集成)
 - [错误处理](#错误处理)
 - [最佳实践](#最佳实践)
@@ -75,6 +76,33 @@ $message->send(
     '这是一条群组消息'
 );
 ```
+
+## 回调 (卡片/事件)
+
+SDK 提供 `Feishu::server()` 处理飞书回调（验签/时间窗/可选 AES 解密/Challenge 响应），并支持中间件：
+
+```php
+use Yuxin\Feishu\Facades\Feishu;
+
+$server = Feishu::server(); // 使用 config('feishu.encrypt_key')（如启用加密）
+
+$server->with(function (array $message, \Closure $next) {
+    // 针对解密且已验签的 $message 进行自定义处理
+    return $next($message);
+});
+
+$result = $server->serve(); // 如需自定义 headers/body，可传参 serve($headers, $rawBody)
+
+if (isset($result['challenge'])) {
+    return response()->json(['challenge' => $result['challenge']]);
+}
+
+return response()->json($result); // ['status' => 'success', 'data' => $message]
+```
+
+- 验签：`X-Lark-Request-Timestamp/Nonce/Signature`，计算 `sha256(timestamp + nonce + encryptKey + rawBody)`（原始 body 串，hex 字符串对比）。
+- 加密：body 含 `encrypt` 时自动解密（base64 payload 前 16 bytes 为 IV，后续为 AES-256-CBC 密文），需配置 `FEISHU_ENCRYPT_KEY`。
+- 时间窗：默认 5 分钟，超时会抛出异常。
 
 ## 多维表格 (Bitable)
 
