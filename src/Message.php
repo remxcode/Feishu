@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Yuxin\Feishu;
 
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Facades\Log;
 use Yuxin\Feishu\Contracts\AccessTokenInterface;
 use Yuxin\Feishu\Contracts\UserInterface;
 use Yuxin\Feishu\Enums\MessageTypeEnum;
@@ -97,7 +98,13 @@ class Message
         string $receiveIdType = ReceiveIDTypeEnum::OpenID->value,
     ): bool {
         $this->validateParameters($messageType, $userIdType, $receiveIdType);
-
+        if ($messageType === MessageTypeEnum::Text->value) {
+            $content = [
+                $messageType => $this->formatContent($content),
+            ];
+        } else {
+            $content = $this->formatContent($content);
+        }
         $response = json_decode($this->getHttpClient()->getClient()->post('im/v1/messages', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->accessTokenInstance->getToken(),
@@ -108,9 +115,7 @@ class Message
             'body' => json_encode([
                 'receive_id' => $this->getReceiveId($to, $userIdType, $receiveIdType),
                 'msg_type'   => $messageType,
-                'content'    => json_encode([
-                    $messageType => $this->formatContent($content),
-                ]),
+                'content'    => json_encode($content),
             ]),
         ])->getBody()->getContents(), true);
 
