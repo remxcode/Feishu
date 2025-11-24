@@ -68,6 +68,20 @@ it('rejects expired timestamp', function (): void {
     ], $rawBody, 10))->toThrow(RuntimeException::class);
 });
 
+it('handles unsigned url_verification fallback', function (): void {
+    $server = new Server();
+
+    $rawBody = json_encode([
+        'type' => 'url_verification',
+        'challenge' => '2f1f9485-43db-476e-a50b-01f29c28f777',
+        'token' => 'lpbmrTMpoJmeKUKFPUCRVgtlsXmJLeWX',
+    ]);
+
+    $result = $server->serve([], $rawBody);
+
+    expect($result)->toMatchArray(['challenge' => '2f1f9485-43db-476e-a50b-01f29c28f777']);
+});
+
 function encryptFeishuPayload(string $plain, string $encryptKey): string
 {
     $key = hash('sha256', $encryptKey, true);

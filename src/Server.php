@@ -69,7 +69,19 @@ class Server
         $nonce = (string) ($headers['X-Lark-Request-Nonce'] ?? $headers['x-lark-request-nonce'] ?? '');
         $signature = (string) ($headers['X-Lark-Signature'] ?? $headers['x-lark-signature'] ?? '');
 
+        $payload = $this->decodePayload($rawBody);
+        $isChallenge = isset($payload['challenge']);
+
+        // Fallback: some legacy url_verification payloads come without signature headers.
         if ($timestamp === '' || $nonce === '' || $signature === '') {
+            if ($isChallenge && ($payload['type'] ?? null) === 'url_verification') {
+                return [
+                    'payload' => $payload,
+                    'is_challenge' => true,
+                    'challenge' => (string) $payload['challenge'],
+                ];
+            }
+
             throw new RuntimeException('Missing Feishu callback headers.');
         }
 
@@ -80,9 +92,6 @@ class Server
         if (! $this->verifySignature($timestamp, $nonce, $rawBody, $signature)) {
             throw new RuntimeException('Invalid Feishu callback signature.');
         }
-
-        $payload = $this->decodePayload($rawBody);
-        $isChallenge = isset($payload['challenge']);
 
         return [
             'payload' => $payload,
