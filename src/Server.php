@@ -164,10 +164,40 @@ class Server
             return false;
         }
 
-        $ts = (int) $timestamp;
+        $ts = $this->normalizeTimestamp($timestamp);
         $now = time();
 
         return abs($now - $ts) <= $toleranceSeconds;
+    }
+
+    /**
+     * Normalize timestamp header which might be an integer seconds or a full datetime string.
+     */
+    protected function normalizeTimestamp(string $timestamp): int
+    {
+        // If numeric (or float-like), use as-is
+        if (is_numeric($timestamp)) {
+            return (int) $timestamp;
+        }
+
+        // Strip trailing perf markers like " m=+0.000" if present.
+        $timestamp = preg_replace('/\\s+m=.*$/', '', $timestamp);
+
+        // Try to parse datetime strings like "2025-11-24 15:58:49.153131788 +0800 CST"
+        if (preg_match('/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})(?:\.\d+)?(.*)$/', $timestamp, $matches)) {
+            $trimmed = $matches[1] . ($matches[2] ?? '');
+            $parsed = strtotime(trim($trimmed));
+            if ($parsed !== false) {
+                return $parsed;
+            }
+        }
+
+        $parsed = strtotime($timestamp);
+        if ($parsed !== false) {
+            return $parsed;
+        }
+
+        return 0;
     }
 
     /**
