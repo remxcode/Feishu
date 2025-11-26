@@ -96,7 +96,7 @@ class Message
         string|array $content,
         string $userIdType = UserIDTypeEnum::OpenID->value,
         string $receiveIdType = ReceiveIDTypeEnum::OpenID->value,
-    ): bool {
+    ): ?string {
         $this->validateParameters($messageType, $userIdType, $receiveIdType);
         if ($messageType === MessageTypeEnum::Text->value) {
             $content = [
@@ -127,7 +127,7 @@ class Message
 
         event(new MessageSent($to, $messageType, $messageId));
 
-        return $messageId ?? true;
+        return $messageId;
     }
 
     /**
