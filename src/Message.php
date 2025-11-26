@@ -80,7 +80,7 @@ class Message
      * @param  string  $content  消息内容，JSON 格式的字符串
      * @param  string  $userIdType  用户ID类型，使用 UserIDTypeEnum 中的值，默认为 open_id
      * @param  string  $receiveIdType  接收者ID类型，使用 ReceiveIDTypeEnum 中的值，默认为 open_id
-     * @return bool 发送成功返回 true，失败抛出异常
+     * @return string|bool 发送成功返回 message_id（部分场景不返回时为 true），失败抛出异常
      *
      * @throws InvalidArgumentException 当消息类型、用户 ID 类型或接收者 ID 类型无效时
      * @throws HttpException 当 API 调用失败时
@@ -123,9 +123,11 @@ class Message
             throw new HttpException($response['msg'] ?? 'Unknown error', $response['code'] ?? 0);
         }
 
-        event(new MessageSent($to, $messageType, $response['data']['message_id'] ?? null));
+        $messageId = $response['data']['message_id'] ?? null;
 
-        return true;
+        event(new MessageSent($to, $messageType, $messageId));
+
+        return $messageId ?? true;
     }
 
     /**
