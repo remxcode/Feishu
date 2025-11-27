@@ -201,14 +201,11 @@ class Server
     }
 
     /**
-     * Build middleware pipeline; default terminator returns success + data.
+     * Build middleware pipeline; default terminator returns raw payload.
      */
     protected function buildPipeline(): callable
     {
-        $next = static fn (array $message): array => [
-            'status' => 'success',
-            'data' => $message,
-        ];
+        $next = static fn (array $message): array => $message;
 
         return array_reduce(
             array_reverse($this->middleware),
