@@ -86,7 +86,7 @@ class Bitable
             'ignore_consistency_check' => $ignoreConsistencyCheck,
         ], static fn ($value) => $value !== null);
 
-        return $this->send('PATCH', $this->recordUri($appToken, $tableId, $recordId), [
+        return $this->send('PUT', $this->recordUri($appToken, $tableId, $recordId), [
             'json' => $payload,
             'query' => $query,
         ]);
