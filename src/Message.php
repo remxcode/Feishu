@@ -172,4 +172,38 @@ class Message
 
         return $decoded;
     }
+
+    /**
+     * 延迟更新消息卡片
+     *
+     * 根据飞书官方文档，更新已发送的卡片消息内容。
+     * 用于更新卡片的模板变量，实现多用户卡片同步。
+     *
+     * @link https://open.feishu.cn/document/server-docs/im-v1/message-card/patch
+     *
+     * @param  string  $messageId  消息 ID（open_message_id）
+     * @param  array  $card  卡片内容，包含 data.template_id 和 data.template_variable
+     * @return bool 更新成功返回 true
+     *
+     * @throws HttpException 当 API 调用失败时
+     * @throws GuzzleException
+     */
+    public function updateCard(string $messageId, array $card): bool
+    {
+        $response = json_decode($this->getHttpClient()->getClient()->patch("im/v1/messages/{$messageId}", [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->accessTokenInstance->getToken(),
+                'Content-Type' => 'application/json',
+            ],
+            'body' => json_encode([
+                'content' => json_encode($card),
+            ]),
+        ])->getBody()->getContents(), true);
+
+        if ($response['code'] !== 0) {
+            throw new HttpException($response['msg'] ?? 'Unknown error', $response['code'] ?? 0);
+        }
+
+        return true;
+    }
 }
