@@ -131,6 +131,73 @@ class Message
     }
 
     /**
+     * 回复消息
+     *
+     * 以引用的方式回复指定消息，被回复的消息会在会话中以引用样式展示。
+     *
+     * @link https://open.feishu.cn/document/server-docs/im-v1/message/reply
+     *
+     * @param  string  $messageId  被回复的消息 ID（open_message_id）
+     * @param  string  $messageType  消息类型，使用 MessageTypeEnum 中的值
+     * @param  string|array  $content  消息内容，JSON 格式的字符串或数组
+     * @param  string|null  $uuid  自定义请求唯一标识，用于请求去重（同一 uuid 在 1 小时内至多成功回复一条，最长 50 字符）
+     * @param  bool  $replyInThread  是否以话题形式回复
+     * @return string|null 回复成功返回新消息的 message_id
+     *
+     * @throws InvalidArgumentException 当消息类型无效时
+     * @throws HttpException 当 API 调用失败时
+     * @throws GuzzleException
+     *
+     * @see MessageTypeEnum
+     */
+    public function reply(
+        string $messageId,
+        string $messageType,
+        string|array $content,
+        ?string $uuid = null,
+        bool $replyInThread = false,
+    ): ?string {
+        if (! in_array($messageType, array_column(MessageTypeEnum::cases(), 'value'))) {
+            throw new InvalidArgumentException('Invalid message type: ' . $messageType);
+        }
+
+        if ($messageType === MessageTypeEnum::Text->value) {
+            $content = [
+                $messageType => $this->formatContent($content),
+            ];
+        } else {
+            $content = $this->formatContent($content);
+        }
+
+        $body = [
+            'msg_type'        => $messageType,
+            'content'         => json_encode($content),
+            'reply_in_thread' => $replyInThread,
+        ];
+
+        if ($uuid !== null) {
+            $body['uuid'] = $uuid;
+        }
+
+        $response = json_decode($this->getHttpClient()->getClient()->post("im/v1/messages/{$messageId}/reply", [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->accessTokenInstance->getToken(),
+            ],
+            'body' => json_encode($body),
+        ])->getBody()->getContents(), true);
+
+        if ($response['code'] !== 0) {
+            throw new HttpException($response['msg'] ?? 'Unknown error', $response['code'] ?? 0);
+        }
+
+        $newMessageId = $response['data']['message_id'] ?? null;
+
+        event(new MessageSent($messageId, $messageType, $newMessageId));
+
+        return $newMessageId;
+    }
+
+    /**
      * @throws InvalidArgumentException
      */
     protected function validateParameters(string $messageType, string $userIdType, string $receiveIdType): void
